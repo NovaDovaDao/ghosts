@@ -23,7 +23,6 @@ export const getChat = async (req: Request) => {
   const agentId = url.searchParams.get("agentId");
 
   const key = ["chat", userId, agentId ?? "general"];
-  console.log(key);
   const res = await kv.get<{ messages: unknown[] }>(key);
 
   return res.value?.messages ?? [];
