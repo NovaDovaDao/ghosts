@@ -2,7 +2,7 @@ import "jsr:@std/dotenv/load";
 import { PrivyClient } from "@privy-io/server-auth";
 import { Request } from "https://deno.land/x/oak@v17.1.4/mod.ts";
 
-const kv = await Deno.openKv(Deno.env.get("KV_PATH"));
+const kv = await Deno.openKv(Deno.env.get("DENO_KV_PATH"));
 
 // Validate environment variables
 const PRIVY_APP_ID = Deno.env.get("PRIVY_APP_ID");
