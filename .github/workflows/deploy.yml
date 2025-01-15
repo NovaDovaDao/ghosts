@@ -39,6 +39,6 @@ jobs:
         with:
           project: "ooeygg-ghosts-23"
           entrypoint: "main.ts"
-          root: ""
+          root: "functions"
           
           
