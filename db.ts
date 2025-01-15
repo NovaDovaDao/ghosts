@@ -1,7 +1,7 @@
 import "jsr:@std/dotenv/load";
 import { Message, Sender } from "./types.ts";
 
-const kv = await Deno.openKv(Deno.env.get("DENO_KV_PATH"));
+const kv = await Deno.openKv(Deno.env.get("KV_PATH"));
 
 export const updateMessages = async (payload: {
   userId: string;
