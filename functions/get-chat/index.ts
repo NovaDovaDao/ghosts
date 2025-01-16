@@ -7,10 +7,9 @@ import { getMessages } from "../../db.ts";
 const PRIVY_APP_ID = Deno.env.get("PRIVY_APP_ID");
 const PRIVY_APP_SECRET = Deno.env.get("PRIVY_APP_SECRET");
 if (!PRIVY_APP_ID || !PRIVY_APP_SECRET) {
-  console.error(
+  throw new Error(
     "Missing required environment variables: PRIVY_APP_ID and PRIVY_APP_SECRET must be set"
   );
-  Deno.exit(1);
 }
 const privy = new PrivyClient(PRIVY_APP_ID, PRIVY_APP_SECRET);
 
