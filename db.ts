@@ -1,24 +1,25 @@
-import { Sender } from "./types.ts";
-import { PrismaClient } from "./generated/client/deno/edge.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { Database } from "./database.types.ts";
 
-const prisma = new PrismaClient();
+const supabase = createClient<Database>(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_KEY")!
+);
 
 export const createMessage = (payload: {
   userId: string;
   agentId?: string;
-  messageId: string;
+  messageId?: string;
   content: string;
-  sender: Sender;
+  sender: string;
 }) =>
-  prisma.message.create({
-    data: {
-      messageId: payload.messageId,
-      content: payload.content,
-      sender: payload.sender,
-      userId: payload.userId,
-      agentId: payload.agentId,
-    },
+  supabase.from("message").insert({
+    messageId: payload.messageId,
+    content: payload.content,
+    sender: payload.sender,
+    userId: payload.userId,
+    agentId: payload.agentId,
   });
 
 export const getMessages = (userId: string, _agentId: string | null) =>
-  prisma.message.findMany({ where: { userId }, take: 50 });
+  supabase.from("message").select("*").eq("userId", userId);
