@@ -26,3 +26,11 @@ export const createMessage = (payload: {
 
 export const getMessages = (userId: string, _agentId: string | null) =>
   supabase.from("message").select("*").eq("userId", userId);
+
+export const getMessageById = (userId: string, messageId: number) =>
+  supabase
+    .from("message")
+    .select("*")
+    .eq("userId", userId)
+    .eq("id", messageId)
+    .single();

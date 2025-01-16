@@ -1,7 +1,7 @@
 import "jsr:@std/dotenv/load";
 import { PrivyClient } from "@privy-io/server-auth";
 import { Request } from "https://deno.land/x/oak@v17.1.4/mod.ts";
-import { getMessages } from "../../db.ts";
+import { getMessageById, getMessages } from "../../db.ts";
 
 // Validate environment variables
 const PRIVY_APP_ID = Deno.env.get("PRIVY_APP_ID");
@@ -20,6 +20,10 @@ export const getChat = async (req: Request) => {
   const url = new URL(req.url);
   const { userId } = await privy.verifyAuthToken(token);
   const agentId = url.searchParams.get("agentId");
+
+  if (url.searchParams.has("messageId")) {
+    return getMessageById(userId, +url.searchParams.get("messageId")!);
+  }
 
   const res = await getMessages(userId, agentId);
 
