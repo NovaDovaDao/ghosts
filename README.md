@@ -15,7 +15,7 @@ This repository houses a collection of spooky serverless functions (Lambda funct
 1.  Configure environment variables:
 
     ```bash
-    DENO_KV_PATH=<your-kv-namespace>
+    MY_BALLS=<your-kv-namespace>
     DENO_KV_ACCESS_TOKEN=<your-deno-access-token>
     PRIVY_APP_ID=<your-privy-app-id>
     PRIVY_APP_SECRET=<your-privy-app-secret>
