@@ -13,13 +13,16 @@ export const createMessage = (payload: {
   content: string;
   sender: string;
 }) =>
-  supabase.from("message").insert({
-    messageId: payload.messageId,
-    content: payload.content,
-    sender: payload.sender,
-    userId: payload.userId,
-    agentId: payload.agentId,
-  });
+  supabase
+    .from("message")
+    .insert({
+      messageId: payload.messageId,
+      content: payload.content,
+      sender: payload.sender,
+      userId: payload.userId,
+      agentId: payload.agentId,
+    })
+    .select("id");
 
 export const getMessages = (userId: string, _agentId: string | null) =>
   supabase.from("message").select("*").eq("userId", userId);
