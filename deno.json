@@ -1,8 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --watch -A main.ts",
-    "deploy": "deployctl deploy --project=ghosts",
-    "generate-typing": "deno run -A npm:supabase gen types typescript --project-id nhilhycurdscxlrtbdtp > database.types.ts"
+    "dev": "deno run --watch -A --unstable-kv --unstable-detect-cjs main.ts",
+    "deploy": "deployctl deploy --project=ghosts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",

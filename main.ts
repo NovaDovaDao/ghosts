@@ -1,17 +1,24 @@
 import { Application, Router } from "https://deno.land/x/oak@v17.1.4/mod.ts";
 import { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
-import { getChat } from "./functions/get-chat/index.ts";
-import { processMessage } from "./functions/process-message/index.ts";
+import { getChatHistory, addNewMessage } from "./services/chat.service.ts";
+import { createAgent, getAgent } from "./services/agent.service..ts";
 
 const router = new Router();
-router.get("/get-chat", async (context) => {
-  context.response.body = await getChat(context.request);
-});
+router
+  .get("/chat", async (ctx) => {
+    ctx.response.body = await getChatHistory(ctx.request);
+  })
+  .post("/chat", async (ctx) => {
+    ctx.response.body = await addNewMessage(ctx.request);
+  });
 
-router.post("/process-message", async (context) => {
-  const response = await processMessage(context.request);
-  context.response.status = response.status;
-});
+router
+  .get("/agent", async (ctx) => {
+    ctx.response.body = await getAgent(ctx.request);
+  })
+  .post("/agent", async (ctx) => {
+    ctx.response.body = await createAgent(ctx.request);
+  });
 
 const app = new Application();
 app.use(oakCors());
@@ -19,4 +26,5 @@ app.use(router.routes());
 app.use(router.allowedMethods());
 
 const port = parseInt(Deno.env.get("PORT") ?? "5001");
+console.log(`👻 boo! http://localhost:${port}`);
 await app.listen({ port });
