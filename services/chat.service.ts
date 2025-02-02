@@ -56,9 +56,13 @@ export const addNewMessage = async (req: Request): Promise<Message> => {
     return addMessage({ role: "agent", content: agentMessage.output });
   } catch (error) {
     console.error("Unable to save new message", error);
+
+    let content = "Unable to respond";
+    if (error instanceof Error) content += `. ${error.message}`;
+
     return {
       role: "system",
-      content: "Unable to respond",
+      content,
       timestamp: Date.now(),
     };
   }
