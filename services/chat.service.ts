@@ -19,23 +19,35 @@ interface Message {
   content: string;
   timestamp: number;
 }
-export const addNewMessage = async (req: Request) => {
-  const { userId } = await getUserIdFromRequest(req);
-  const addMessage = saveMessage(userId);
+export const addNewMessage = async (req: Request): Promise<Message> => {
+  try {
+    const { userId } = await getUserIdFromRequest(req);
+    const addMessage = saveMessage(userId);
 
-  const body = await req.body.json();
-  await addMessage({ role: "user", content: body.content });
+    const body = await req.body.json();
+    await addMessage({ role: "user", content: body.content });
 
-  const agentResponse = await fetch(Deno.env.get("N8N_DOVA_WEBHOOK")!, {
-    method: "POST",
-    body: JSON.stringify({
-      sessionId: userId,
-      content: body.content,
-    }),
-  });
-  const agentMessage: { output: string } = await agentResponse.json();
+    const agentResponse = await fetch(Deno.env.get("N8N_DOVA_WEBHOOK")!, {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: userId,
+        content: body.content,
+      }),
+    });
 
-  return addMessage({ role: "agent", content: agentMessage.output });
+    if (!agentResponse.ok) throw new Error("n8n response not ok");
+
+    const agentMessage: { output: string } = await agentResponse.json();
+
+    return addMessage({ role: "agent", content: agentMessage.output });
+  } catch (error) {
+    console.error("Unable to save new message", error);
+    return {
+      role: "system",
+      content: "Unable to respond",
+      timestamp: Date.now(),
+    };
+  }
 };
 
 const saveMessage =
