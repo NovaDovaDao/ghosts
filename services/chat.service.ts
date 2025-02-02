@@ -1,10 +1,15 @@
 import { Request } from "https://deno.land/x/oak@v17.1.4/mod.ts";
 import { getUserIdFromRequest } from "./auth.service.ts";
+import { checkAnonReqCount } from "./redis.service.ts";
 
 const kv = await Deno.openKv();
 
 export const getChatHistory = async (req: Request) => {
-  const { userId } = await getUserIdFromRequest(req);
+  let userId = await getUserIdFromRequest(req);
+
+  if (!userId) {
+    userId = req.ip;
+  }
 
   const entries = kv.list({ prefix: ["chat", userId] });
   const results = [];
@@ -21,7 +26,13 @@ interface Message {
 }
 export const addNewMessage = async (req: Request): Promise<Message> => {
   try {
-    const { userId } = await getUserIdFromRequest(req);
+    let userId = await getUserIdFromRequest(req);
+
+    if (!userId) {
+      userId = req.ip;
+      await checkAnonReqCount(req.ip);
+    }
+
     const addMessage = saveMessage(userId);
 
     const body = await req.body.json();
@@ -33,6 +44,9 @@ export const addNewMessage = async (req: Request): Promise<Message> => {
         sessionId: userId,
         content: body.content,
       }),
+      headers: {
+        "x-ghost-token": req.headers.get("x-ghost-token"),
+      },
     });
 
     if (!agentResponse.ok) throw new Error("n8n response not ok");

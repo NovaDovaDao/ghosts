@@ -12,12 +12,11 @@ if (!PRIVY_APP_ID || !PRIVY_APP_SECRET) {
 }
 const privy = new PrivyClient(PRIVY_APP_ID, PRIVY_APP_SECRET);
 
-export const getUserIdFromRequest = (req: Request) => {
-  const n8nUserId = req.headers.get("x-n8n-user-id");
-  if (n8nUserId) return { userId: n8nUserId };
-
+export const getUserIdFromRequest = async (req: Request) => {
   const token = req.headers.get("x-ghost-token");
-  if (!token) throw "invalid request";
+  if (!token) return null;
 
-  return privy.verifyAuthToken(token);
+  const verified = await privy.verifyAuthToken(token);
+
+  return verified.userId;
 };
