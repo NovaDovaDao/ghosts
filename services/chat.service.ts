@@ -1,22 +1,19 @@
-import { Request } from "https://deno.land/x/oak@v17.1.4/mod.ts";
-import { getUserIdFromRequest } from "./auth.service.ts";
+import { Context } from "https://deno.land/x/oak@v17.1.4/mod.ts";
 import { checkAnonReqCount } from "./redis.service.ts";
+import { Status } from "jsr:@oak/commons@1/status";
 
 const kv = await Deno.openKv();
 
-export const getChatHistory = async (req: Request) => {
-  let userId = await getUserIdFromRequest(req);
-
-  if (!userId) {
-    userId = req.ip;
-  }
+export const getChatHistory = async (ctx: Context) => {
+  const userId = ctx.state.userId || ctx.request.ip;
 
   const entries = kv.list({ prefix: ["chat", userId] });
   const results = [];
   for await (const entry of entries) {
     results.push(entry.value);
   }
-  return results;
+
+  ctx.response.body = results;
 };
 
 interface Message {
@@ -24,18 +21,18 @@ interface Message {
   content: string;
   timestamp: number;
 }
-export const addNewMessage = async (req: Request): Promise<Message> => {
+export const addNewMessage = async (ctx: Context) => {
   try {
-    let userId = await getUserIdFromRequest(req);
+    let userId = ctx.state.userId;
 
     if (!userId) {
-      userId = req.ip;
-      await checkAnonReqCount(req.ip);
+      userId = ctx.request.ip;
+      await checkAnonReqCount(ctx.request.ip);
     }
 
     const addMessage = saveMessage(userId);
 
-    const body = await req.body.json();
+    const body = await ctx.request.body.json();
     await addMessage({ role: "user", content: body.content });
 
     const agentResponse = await fetch(Deno.env.get("N8N_DOVA_WEBHOOK")!, {
@@ -45,7 +42,7 @@ export const addNewMessage = async (req: Request): Promise<Message> => {
         content: body.content,
       }),
       headers: {
-        "x-ghost-token": req.headers.get("x-ghost-token"),
+        "x-ghost-token": ctx.request.headers.get("x-ghost-token"),
       },
     });
 
@@ -53,14 +50,19 @@ export const addNewMessage = async (req: Request): Promise<Message> => {
 
     const agentMessage: { output: string } = await agentResponse.json();
 
-    return addMessage({ role: "agent", content: agentMessage.output });
+    ctx.response.status = Status.Created;
+    ctx.response.body = await addMessage({
+      role: "agent",
+      content: agentMessage.output,
+    });
   } catch (error) {
     console.error("Unable to save new message", error);
 
     let content = "Unable to respond";
     if (error instanceof Error) content += `. ${error.message}`;
 
-    return {
+    ctx.response.status = Status.Created;
+    ctx.response.body = {
       role: "system",
       content,
       timestamp: Date.now(),
