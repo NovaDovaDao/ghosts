@@ -1,6 +1,7 @@
 import { Context } from "https://deno.land/x/oak@v17.1.4/mod.ts";
 import { checkAnonReqCount } from "./redis.service.ts";
 import { Status } from "https://deno.land/x/oak@v17.1.4/deps.ts";
+import { checkBasicAuth } from "./auth.service.ts";
 
 const kv = await Deno.openKv();
 const AGENT_CONFIG = "agent-config";
@@ -27,9 +28,9 @@ export const getAgent = async (ctx: Context) => {
 
 export const getAgentById = async (ctx: Context) => {
   let userId = ctx.state.userId;
-  console.log("is n8n request?", ctx.request.headers.get("Authorization"));
 
-  if (!userId) {
+  // check if not logged in and not an n8n request.
+  if (!userId && !checkBasicAuth(ctx.request)) {
     userId = ctx.request.ip;
     await checkAnonReqCount(ctx.request.ip);
   }
