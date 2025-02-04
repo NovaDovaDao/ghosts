@@ -39,10 +39,11 @@ export const getAgentById = async (ctx: Context) => {
 
   const agent = await kv.get<AgentConfiguration>([AGENT_CONFIG, agentId]);
 
-  ctx.response.body = agent.value;
+  ctx.response.body = agent.versionstamp ? agent.value : null;
 };
 
 interface AgentConfiguration {
+  id: string;
   userId: string;
   name: string;
   description: string;
@@ -60,10 +61,22 @@ export const createAgent = async (ctx: Context) => {
       await checkAnonReqCount(ctx.request.ip);
     }
 
-    const agentId = crypto.randomUUID();
+    // FIXME: refactor this into a reusable function
+    const list = kv.list<AgentConfiguration>({
+      prefix: [AGENT_CONFIG, userId],
+    });
+    const agents: AgentConfiguration[] = [];
+
+    for await (const item of list) {
+      agents.push(item.value);
+    }
+    const [firstAgent] = agents;
+
+    const agentId = firstAgent?.id || crypto.randomUUID();
 
     const body = await ctx.request.body.json();
     const configuration = {
+      id: agentId,
       userId,
       name: body.name,
       description: body.description,
