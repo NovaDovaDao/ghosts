@@ -5,6 +5,7 @@ import {
   createAgent,
   deployAgent,
   getAgent,
+  getAgentById,
 } from "./services/agent.service.ts";
 import { getUserIdFromRequest } from "./services/auth.service.ts";
 
@@ -15,7 +16,8 @@ async function main() {
   router
     .get("/agent", getAgent)
     .post("/agent", createAgent)
-    .post("/agent/deploy", deployAgent);
+    .post("/agent/deploy", deployAgent)
+    .get("/agent/:agentId", getAgentById);
 
   const app = new Application();
   app.use(async (ctx, next) => {
