@@ -1,10 +1,10 @@
-import { Context, RouterContext } from "https://deno.land/x/oak@v17.1.4/mod.ts";
+import { Context } from "https://deno.land/x/oak@v17.1.4/mod.ts";
 import { checkAnonReqCount } from "./redis.service.ts";
 import { Status } from "https://deno.land/x/oak@v17.1.4/deps.ts";
 
 const kv = await Deno.openKv();
-const AGENT_CONFIG = Symbol("agent-config");
-const USER_AGENTS = Symbol("user-agents");
+const AGENT_CONFIG = "agent-config";
+const USER_AGENTS = "user-agents";
 
 export const getAgent = async (ctx: Context) => {
   let userId = ctx.state.userId;
