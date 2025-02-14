@@ -3,9 +3,10 @@ import { connect } from "https://deno.land/x/redis@v0.37.1/redis.ts";
 const hostname = Deno.env.get("REDIS_HOSTNAME");
 const port = Deno.env.get("REDIS_PORT");
 const password = Deno.env.get("REDIS_PASSWORD");
-const MAX_ANON_REQ = 10;
+const MAX_ANON_REQ = 69;
 
-if (!hostname || !port || !password) throw "Missing Redis credentials";
+if (!hostname || !port || !password)
+  throw new Error("Missing Redis credentials");
 
 export const requireRedis = () =>
   connect({

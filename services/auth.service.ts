@@ -1,4 +1,3 @@
-import "jsr:@std/dotenv/load";
 import { PrivyClient } from "@privy-io/server-auth";
 import { Request } from "https://deno.land/x/oak@v17.1.4/mod.ts";
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";

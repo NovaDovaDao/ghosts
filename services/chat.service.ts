@@ -4,23 +4,29 @@ import { Status } from "jsr:@oak/commons@1/status";
 
 const kv = await Deno.openKv();
 
-export const getChatHistory = async (ctx: Context) => {
-  const userId = ctx.state.userId || ctx.request.ip;
-
-  const entries = kv.list({ prefix: ["chat", userId] });
-  const results = [];
-  for await (const entry of entries) {
-    results.push(entry.value);
-  }
-
-  ctx.response.body = results;
-};
+interface N8nDovaMessage {
+  output: string | { reason: string; configuration?: object };
+}
 
 interface Message {
   role: "user" | "agent" | "system";
   content: string;
+  configuration?: object;
   timestamp: number;
 }
+
+export const getChatHistory = async (ctx: Context) => {
+  const userId = ctx.state.userId || ctx.request.ip;
+
+  const entries = kv.list<Message>({ prefix: ["chat", userId] });
+  const results: Message[] = [];
+  for await (const entry of entries) {
+    results.push(entry.value);
+  }
+
+  ctx.response.body = results.sort((a, b) => a.timestamp - b.timestamp);
+};
+
 export const addNewMessage = async (ctx: Context) => {
   try {
     let userId = ctx.state.userId;
@@ -48,13 +54,25 @@ export const addNewMessage = async (ctx: Context) => {
 
     if (!agentResponse.ok) throw new Error("n8n response not ok");
 
-    const agentMessage: { output: string } = await agentResponse.json();
+    const agentMessage: N8nDovaMessage = await agentResponse.json();
 
     ctx.response.status = Status.Created;
-    ctx.response.body = await addMessage({
-      role: "agent",
-      content: agentMessage.output,
-    });
+
+    if (
+      typeof agentMessage.output === "object" &&
+      "reason" in agentMessage.output
+    ) {
+      ctx.response.body = await addMessage({
+        role: "agent",
+        content: agentMessage.output.reason,
+        configuration: agentMessage.output.configuration,
+      });
+    } else {
+      ctx.response.body = await addMessage({
+        role: "agent",
+        content: agentMessage.output,
+      });
+    }
   } catch (error) {
     console.error("Unable to save new message", error);
 
@@ -72,11 +90,16 @@ export const addNewMessage = async (ctx: Context) => {
 
 const saveMessage =
   (userId: string) =>
-  async ({ role, content }: Pick<Message, "content" | "role">) => {
+  async ({
+    role,
+    content,
+    configuration,
+  }: Pick<Message, "content" | "role" | "configuration">) => {
     const messageId = crypto.randomUUID();
     const message = {
       role,
       content,
+      configuration,
       timestamp: Date.now(),
     } satisfies Message;
     await kv.set(["chat", userId, messageId], message);

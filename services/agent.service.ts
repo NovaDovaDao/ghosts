@@ -7,7 +7,7 @@ const kv = await Deno.openKv();
 const AGENT_CONFIG = "agent-config";
 const USER_AGENTS = "user-agents";
 
-export const getAgent = async (ctx: Context) => {
+export const getAgents = async (ctx: Context) => {
   let userId = ctx.state.userId;
 
   if (!userId) {
@@ -21,9 +21,8 @@ export const getAgent = async (ctx: Context) => {
   for await (const item of list) {
     agents.push(item.value);
   }
-  const [firstAgent] = agents;
 
-  ctx.response.body = firstAgent;
+  ctx.response.body = agents;
 };
 
 export const getAgentById = async (ctx: Context) => {
@@ -40,7 +39,7 @@ export const getAgentById = async (ctx: Context) => {
 
   const agent = await kv.get<AgentConfiguration>([AGENT_CONFIG, agentId]);
 
-  ctx.response.body = agent.versionstamp ? agent.value : null;
+  ctx.response.body = agent.value;
 };
 
 interface AgentConfiguration {
@@ -62,18 +61,7 @@ export const createAgent = async (ctx: Context) => {
       await checkAnonReqCount(ctx.request.ip);
     }
 
-    // FIXME: refactor this into a reusable function
-    const list = kv.list<AgentConfiguration>({
-      prefix: [AGENT_CONFIG, userId],
-    });
-    const agents: AgentConfiguration[] = [];
-
-    for await (const item of list) {
-      agents.push(item.value);
-    }
-    const [firstAgent] = agents;
-
-    const agentId = firstAgent?.id || crypto.randomUUID();
+    const agentId = crypto.randomUUID();
 
     const body = await ctx.request.body.json();
     const configuration = {
