@@ -9,6 +9,7 @@ import {
   getAgents,
 } from "./services/agent.service.ts";
 import { getUserIdFromRequest } from "./services/auth.service.ts";
+import { importCompanies } from "./services/twenty.service.ts";
 
 async function main() {
   const router = new Router();
@@ -19,6 +20,8 @@ async function main() {
     .post("/agent", createAgent)
     .post("/agent/deploy", deployAgent)
     .get("/agent/:agentId", getAgentById);
+
+  router.post("/import/companies", importCompanies);
 
   const app = new Application();
   app.use(async (ctx, next) => {
